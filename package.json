@@ -1,0 +1,11 @@
+{
+  "name": "ws-channels",
+  "version": "1.0.1",
+  "description": "",
+  "main": "src/channels.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Adizbek Ergashev",
+  "license": "ISC"
+}
