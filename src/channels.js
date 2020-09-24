@@ -1,3 +1,8 @@
+/**
+ * @typedef ChannelOptions
+ * @property {number} reconnectInterval
+ */
+
 export class Channel {
 
   /** @type {string} */
@@ -14,10 +19,7 @@ export class Channel {
 
   /**
    * @param {string} url
-   *
-   * @param {object} options
-   * @param {number} options.reconnectInterval
-   *
+   * @param {ChannelOptions} options
    */
   constructor (url, options = {}) {
     this.url = url
@@ -126,11 +128,16 @@ export class Channel {
   }
 }
 
-/**
- * @param {App} app
- * @param {object} options
- * @param {string} options.url
- */
-export function install (app, options) {
-  app.config.globalProperties.$ws = new Channel(options.url)
+export class VuePlugin {
+
+  /**
+   * @param {App} app
+   * @param {object} options
+   * @param {string} options.url
+   * @param {ChannelOptions} options.wsOptions
+   */
+  install (app, options) {
+    app.config.globalProperties.$ws = new Channel(options.url, options.wsOptions)
+  }
+
 }
