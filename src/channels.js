@@ -128,6 +128,8 @@ export class Channel {
   }
 }
 
+export let $channel = null;
+
 export class ChannelsVuePlugin {
 
   /**
@@ -137,10 +139,12 @@ export class ChannelsVuePlugin {
    * @param {ChannelOptions} options.wsOptions
    */
   install (app, options) {
+    $channel = new Channel(options.url, options.wsOptions)
+    
     if (app.version.startsWith('3') && app.config.globalProperties) {
-      app.config.globalProperties.$ws = new Channel(options.url, options.wsOptions)
+      app.config.globalProperties.$ws = $channel
     } else if (app.config && !app.config.globalProperties) {
-      app.prototype.$ws = new Channel(options.url, options.wsOptions)
+      app.prototype.$ws = $channel
     } else {
       console.warn('Channels can not install vue plugin')
     }
