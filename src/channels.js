@@ -125,3 +125,12 @@ export class Channel {
     }
   }
 }
+
+/**
+ * @param {App} app
+ * @param {object} options
+ * @param {string} options.url
+ */
+export function install (app, options) {
+  app.config.globalProperties.$ws = new Channel(options.url)
+}
