@@ -11,7 +11,7 @@ export const ChannelsVuePlugin = {
    * @param {ChannelOptions} options.wsOptions
    */
   install (app, options) {
-    $channel = new Channel(options.url, options.wsOptions)
+    $channel = new Channel(options.url, options.wsOptions || {})
 
     if (app.version.startsWith('3') && app.config.globalProperties) {
       app.config.globalProperties.$ws = $channel

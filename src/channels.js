@@ -10,11 +10,16 @@
  * @param {String} url.
  * @param {ChannelOptions} options
  */
-export function Channel (url, options) {
+export function Channel (url, options = {}) {
   this.listeners = {}
   this.connected = false
   this.reconnectInterval = 5000
   this.url = url
+
+  if (!this.url) {
+    console.error('Please specify url')
+    return
+  }
 
   if (Number.isInteger(options.reconnectInterval) > options.reconnectInterval > 0) {
     this.reconnectInterval = options.reconnectInterval
