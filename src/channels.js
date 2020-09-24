@@ -128,7 +128,7 @@ export class Channel {
   }
 }
 
-export class VuePlugin {
+export class ChannelsVuePlugin {
 
   /**
    * @param {App|*} app
