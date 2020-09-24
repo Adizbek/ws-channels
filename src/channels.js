@@ -128,9 +128,9 @@ export class Channel {
   }
 }
 
-export let $channel = null;
+export let $channel = null
 
-export class ChannelsVuePlugin {
+export const ChannelsVuePlugin = {
 
   /**
    * @param {App|*} app
@@ -140,7 +140,7 @@ export class ChannelsVuePlugin {
    */
   install (app, options) {
     $channel = new Channel(options.url, options.wsOptions)
-    
+
     if (app.version.startsWith('3') && app.config.globalProperties) {
       app.config.globalProperties.$ws = $channel
     } else if (app.config && !app.config.globalProperties) {
