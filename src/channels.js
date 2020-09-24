@@ -3,151 +3,119 @@
  * @property {number} reconnectInterval
  */
 
-export class Channel {
+/**
+ * Channel class.
+ *
+ * @constructor
+ * @param {String} url.
+ * @param {ChannelOptions} options
+ */
+export function Channel (url, options) {
+  this.listeners = {}
+  this.connected = false
+  this.reconnectInterval = 5000
+  this.url = url
 
-  /** @type {string} */
-  url
-
-  /** @typedef {WebSocket} */
-  websocket
-
-  connected = false
-
-  listeners = {}
-
-  reconnectInterval = 5000
-
-  /**
-   * @param {string} url
-   * @param {ChannelOptions} options
-   */
-  constructor (url, options = {}) {
-    this.url = url
-    this.connect()
-
-    if (Number.isInteger(options.reconnectInterval) > options.reconnectInterval > 0) {
-      this.reconnectInterval = options.reconnectInterval
-    }
+  if (Number.isInteger(options.reconnectInterval) > options.reconnectInterval > 0) {
+    this.reconnectInterval = options.reconnectInterval
   }
 
-  connect () {
-    console.log('Trying to connect')
+  this.connect()
+}
 
-    this.websocket = new WebSocket(this.url)
+Channel.prototype.connect = function () {
+  console.log('Trying to connect')
 
-    this.websocket.onopen = (event) => {
-      console.log('Connection established')
+  this.websocket = new WebSocket(this.url)
 
-      this._connectionState(true)
-    }
+  this.websocket.onopen = (event) => {
+    console.log('Connection established')
 
-    this.websocket.onclose = (event) => {
-      console.log('Connection closed')
-
-      this._connectionState(false)
-
-      setTimeout(() => {
-        console.log('Reconnecting...')
-
-        this.connect()
-      }, this.reconnectInterval)
-    }
-
-    this.websocket.onmessage = (event) => {
-      let { event: type, payload } = JSON.parse(event.data)
-
-      this.newMessage(type, payload)
-    }
-
-    this.websocket.onerror = (event) => {
-      console.log(event)
-      this.websocket.close()
-    }
+    this._connectionState(true)
   }
 
-  newMessage (type, payload) {
-    if (Array.isArray(this.listeners[type])) {
-      for (let handler of this.listeners[type]) {
-        handler(payload)
-      }
-    }
+  this.websocket.onclose = (event) => {
+    console.log('Connection closed')
+
+    this._connectionState(false)
+
+    setTimeout(() => {
+      console.log('Reconnecting...')
+
+      this.connect()
+    }, this.reconnectInterval)
   }
 
-  send (payload) {
-    this.websocket.send(JSON.stringify(payload))
+  this.websocket.onmessage = (event) => {
+    let { event: type, payload } = JSON.parse(event.data)
+
+    this.newMessage(type, payload)
   }
 
-  /**
-   * @param {string} event
-   * @param {object} payload
-   */
-  sendEvent (event, payload = {}) {
-    this.send({
-      event,
-      payload
-    })
+  this.websocket.onerror = (event) => {
+    console.log(event)
+    this.websocket.close()
   }
+}
 
-  $on (eventName, handler) {
-    if (!Array.isArray(this.listeners[eventName])) {
-      this.listeners[eventName] = []
-    }
-
-    this.listeners[eventName].push(handler)
-  }
-
-  $off (eventName, handler) {
-    if (!Array.isArray(this.listeners[eventName])) {
-      this.listeners[eventName] = []
-    }
-
-    this.listeners[eventName] = this.listeners[eventName].filter(x => x !== handler)
-  }
-
-  afterConnect (cb) {
-    if (this.connected === true) {
-      cb()
-    } else {
-      let timer = setInterval(() => {
-        if (this.connected === true) {
-          clearInterval(timer)
-          cb()
-        }
-      }, 50)
-    }
-  }
-
-  _connectionState (state) {
-    this.connected = state
-
-    if (state === true) {
-      this.newMessage('connected')
-    } else {
-      this.newMessage('disconnected')
+Channel.prototype.newMessage = function (type, payload) {
+  if (Array.isArray(this.listeners[type])) {
+    for (let handler of this.listeners[type]) {
+      handler(payload)
     }
   }
 }
 
-export let $channel = null
+Channel.prototype.send = function (payload) {
+  this.websocket.send(JSON.stringify(payload))
+}
 
-export const ChannelsVuePlugin = {
+/**
+ * @param {string} event
+ * @param {object} payload
+ */
+Channel.prototype.sendEvent = function (event, payload = {}) {
+  this.send({
+    event,
+    payload
+  })
+}
 
-  /**
-   * @param {App|*} app
-   * @param {object} options
-   * @param {string} options.url
-   * @param {ChannelOptions} options.wsOptions
-   */
-  install (app, options) {
-    $channel = new Channel(options.url, options.wsOptions)
-
-    if (app.version.startsWith('3') && app.config.globalProperties) {
-      app.config.globalProperties.$ws = $channel
-    } else if (app.config && !app.config.globalProperties) {
-      app.prototype.$ws = $channel
-    } else {
-      console.warn('Channels can not install vue plugin')
-    }
+Channel.prototype.$on = function (eventName, handler) {
+  if (!Array.isArray(this.listeners[eventName])) {
+    this.listeners[eventName] = []
   }
 
+  this.listeners[eventName].push(handler)
+}
+
+Channel.prototype.$off = function (eventName, handler) {
+  if (!Array.isArray(this.listeners[eventName])) {
+    this.listeners[eventName] = []
+  }
+
+  this.listeners[eventName] = this.listeners[eventName].filter(x => x !== handler)
+}
+
+Channel.prototype.afterConnect = function (cb) {
+  if (this.connected === true) {
+    cb()
+  } else {
+    let timer = setInterval(() => {
+      if (this.connected === true) {
+        clearInterval(timer)
+        cb()
+      }
+    }, 50)
+  }
+}
+
+Channel.prototype._connectionState = function (state) {
+  this.connected = state
+
+  if (state === true) {
+    this.newMessage('connected')
+  } else {
+    this.newMessage('disconnected')
+  }
 }
